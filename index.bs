@@ -743,6 +743,8 @@ To <dfn>handle an incoming message</dfn> given a [=WebSocket connection=]
 
      1. Let |value| be |result|'s data.
 
+     1. If |value| is null, set value to an empty Map.
+
      1. Assert: |value| matches the definition for the [=result type=]
         corresponding to the command with [=command name=] |method|.
 
