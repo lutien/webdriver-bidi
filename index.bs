@@ -239,7 +239,9 @@ Command = {
 
 CommandData = (
   SessionCommand //
-  BrowsingContextCommand
+  BrowsingContextCommand //
+  NetworkCommand //
+  ScriptCommand
 )
 
 EmptyParams = { *text }
@@ -272,6 +274,7 @@ ResultData = (
   EmptyResult //
   SessionResult //
   BrowsingContextResult //
+  NetworkResult //
   ScriptResult
 )
 
@@ -284,6 +287,7 @@ Event = {
 
 EventData = (
   BrowsingContextEvent //
+  NetworkEvent //
   ScriptEvent
 )
 </pre>
@@ -3296,6 +3300,270 @@ failed</dfn> steps given |context| and |navigation status|:
 
 </div>
 
+## The network Module ## {#module-network}
+
+The <dfn export for=modules>network</dfn> module contains commands and events
+relating to network requests.
+
+### Definition ### {#module-network-definition}
+
+<pre class="cddl remote-cddl">
+
+NetworkCommand = (
+)
+
+</pre>
+
+[=local end definition=]
+
+<pre class="cddl local-cddl">
+
+NetworkResult = (
+)
+
+NetworkEvent = (
+    NetworkBeforeSendRequest //
+    NetworkResponseStarted //
+    NetworkResponseCompleted //
+    NetworkError
+)
+
+</pre>
+
+### Types ### {#module-network-types}
+
+#### The network.Cookie type #### {#type-network-Cookie}
+
+[=Remote end definition=] and [=local end definition=]
+
+<pre class="cddl local-cddl">
+NetworkCookie = {
+    name: text,
+    ? value: text,
+    ? binaryValue: [ uint ]
+    domain: text,
+    path: text,
+    expires: uint,
+    size: unit,
+    httpOnly: boolean,
+    secure: boolean,
+    session: boolean,
+    sameSite: "strict" / "lax" / "none",
+};
+</pre>
+
+The <code>NetworkCookie</code> type represents a cookie.
+
+If the cookie value can be represented as a UTF-8 encoded string, the
+<code>value</code> field will be present. Otherwise the <code>binaryValue</code>
+field will be present and consist of an array of integers representing the bytes
+of the cookie value.
+
+#### The network.FetchTimingInfo type #### {#type-network-FetchTimingInfo}
+
+[=Remote end definition=] and [=local end definition=]
+
+<pre class="cddl local-cddl">
+NetworkFetchTimingInfo = {
+    requestTime: uint,
+    redirectStart: uint,
+    redirectEnd: uint,
+    fetchStart: uint,
+    dnsStart: uint,
+    dnsEnd: uint,
+    connectStart: uint,
+    connectEnd: uint,
+    tlsStart: uint,
+    tlsEnd: uint,
+    requestStart: uint,
+    responseStart: uint,
+    responseHeadersEnd: uint,
+    responseEnd: uint,
+};
+</pre>
+
+The <code>NetworkFetchTimingInfo</code> type represents the time of each part of
+the request, relative to <code>requestTime</code>.
+
+TODO: Add service worker fields
+
+#### The network.Header type #### {#type-network-Header}
+
+[=Remote end definition=] and [=local end definition=]
+
+<pre class="cddl local-cddl">
+NetworkHeader = {
+    name: text,
+    ? value: text,
+    ? binaryValue: [ uint ]
+};
+</pre>
+
+The <code>NetworkHeader</code> type represents a single request header.
+
+If the header value can be represented as a UTF-8 encoded string, the
+<code>value</code> field will be present. Otherwise the <code>binaryValue</code>
+field will be present and consist of an array of integers representing the bytes
+of the header.
+
+#### The network.Initiator type #### {#type-network-Initiator}
+
+[=Remote end definition=] and [=local end definition=]
+
+<pre class="cddl local-cddl">
+NetworkInitiator = {
+    type: "parser" / "script" / "preflight" / "other",
+    ?columnNumber: uint,
+    ?lineNumber: uint,
+    ?stackTrace: StackTrace,
+    ?request: NetworkRequest
+};
+</pre>
+
+The <code>NetworkInitiatior</code> type represents the source of a network request.
+
+TODO: Align more closely with Fetch here?
+
+#### The network.Request type #### {#type-network-RequestId}
+
+[=Remote end definition=] and [=local end definition=]
+
+<pre class="cddl local-cddl remote-cddl">
+NetworkRequest = text;
+</pre>
+
+Each network request has an associated <dfn export>request id</dfn>, which is a string
+uniquely identifying that request.
+
+#### The network.RequestInfo type #### {#type-network-RequestInfo}
+
+[=Remote end definition=] and [=local end definition=]
+
+<pre class="cddl local-cddl">
+NetworkRequestInfo = {
+    url: text,
+    method: text,
+    headers: [ *NetworkHeader ]
+    ?body: text,
+    bodySize: uint,
+    headersSize: uint
+};
+</pre>
+
+The <code>NetworkRequestInfo</code> type represents an ongoing network request.
+
+TODO: Boduy is actually bytes, not clear how to handle it as text
+
+#### The network.ResponseData type #### {#type-network-ResponseData}
+
+[=Remote end definition=] and [=local end definition=]
+
+<pre class="cddl local-cddl">
+NetworkResponseData = {
+    url: text,
+    protocol: text,
+    status: unit,
+    statusText: text,
+    headers: [ *NetworkHeader ],
+    cookies: [ *NetworkCookie ],
+    mimeType: text,
+    bytesReceived: uint,
+    timings: NetworkFetchTimingInfo,
+};
+</pre>
+
+### Events ### {#module-network-events}
+
+#### The network.beforeRequestSent Event #### {#event-network-beforeSendRequest}
+
+<dl>
+   <dt>Event Type</dt>
+   <dd>
+      <pre class="cddl local-cddl">
+        NetworkBeforeRequestSentEvent = {
+         method: "network.beforeRequestSent",
+         params: NetworkBeforeRequestSentParams
+       }
+
+       NetworkBeforeRequestSentParams = {
+        request: Request,
+        navigation: Navigation / null,
+        context: BrowsingContext / null,
+        requestData: RequestData,
+        initiator: NetworkInitiator
+        timestamp: number,
+       }
+      </pre>
+   </dd>
+</dl>
+
+#### The network.fetchError Event #### {#event-network-fetchError}
+
+<dl>
+   <dt>Event Type</dt>
+   <dd>
+      <pre class="cddl local-cddl">
+        NetworkFetchErrorEvent = {
+         method: "network.fetchError",
+         params: NetworkFetchErrorParams
+       }
+
+       NetworkFetchErrorParams = {
+        request: Request,
+        errorText: text,
+        timestamp: number,
+       }
+      </pre>
+   </dd>
+</dl>
+
+#### The network.responseCompleted Event #### {#event-network-responseCompleted}
+
+<dl>
+   <dt>Event Type</dt>
+   <dd>
+      <pre class="cddl local-cddl">
+        NetworkResponseCompletedEvent = {
+         method: "network.responseCompleted",
+         params: NetworkResponseCompleteParams
+       }
+
+       NetworkResponseCompletedParams = {
+        request: Request,
+        navigation: Navigation / null,
+        context: BrowsingContext / null,
+        responseData: ResponseData,
+        timestamp: number,
+       }
+      </pre>
+   </dd>
+</dl>
+
+After the full response body is received.
+
+#### The network.responseStarted Event #### {#event-network-responseStarted}
+
+<dl>
+   <dt>Event Type</dt>
+   <dd>
+      <pre class="cddl local-cddl">
+        NetworkResponseStartedEvent = {
+         method: "network.responseStartedEvent",
+         params: NetworkResponseStartedParams
+       }
+
+       NetworkResponseStartedParams = {
+        request: Request,
+        navigaton: Navigation / null,
+        context: BrowsingContext / null,
+        responseData: ResponseData,
+        timestamp: number,
+       }
+      </pre>
+   </dd>
+</dl>
+
+After the response headers are received but before the body.
 
 ## The script Module ## {#module-script}
 
