@@ -2788,6 +2788,9 @@ The [=remote end steps=] with |command parameters| are:
      result of [=trying=] to [=get a browsing context=] with
      |reference context id|. Otherwise let |reference context| be null.
 
+ 1. If |reference context| is not null and is not a [=top-level browsing context=],
+    return [=error=] with [=error code=] [=invalid argument=].
+
   <!-- This is based on step 5 of https://w3c.github.io/webdriver/#new-window,
        but without using the "current browsing context" concept. -->
   1. Create a new [=top-level browsing context=] by running the [=window open
