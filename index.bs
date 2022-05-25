@@ -2804,13 +2804,13 @@ The [=remote end steps=] with |command parameters| are:
      * If |type| is "<code>tab</code>" and the implementation supports
        multiple browsing contexts in the same OS window:
 
-       * The new browsing context should re-use an existing OS window, if any.
+       * The new browsing context should reuse an existing OS window, if any.
 
-       * If |reference context| is not null, the should be the window containing
-         |reference context|, if any. If the top level browsing contexts inside
-         an OS window have a definite ordering, the new created top level
-         browsing context should be immediately after |reference context|'s
-         [=top level browsing context=] in that ordering.
+       * If |reference context| is not null, the new browsing context should
+         reuse the window containing |reference context|, if any. If the top
+         level browsing contexts inside an OS window have a definite ordering,
+         the new created top level browsing context should be immediately after
+         |reference context|'s [=top level browsing context=] in that ordering.
 
      * If |type| is "<code>window</code>", and the implementation supports
        multiple browsing contexts in separate OS windows, the created browsing
